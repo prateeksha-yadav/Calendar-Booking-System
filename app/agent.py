@@ -8,7 +8,7 @@ from app.tools.google_calendar import get_available_slots, book_appointment
 import datetime
 from langgraph.checkpoint.memory import MemorySaver
 
-load_dotenv()
+# load_dotenv() # This line is only for local development
 
 api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
