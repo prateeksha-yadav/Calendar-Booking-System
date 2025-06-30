@@ -103,7 +103,12 @@ def confirm_booking(state: AgentState):
                 f"Success! The appointment has been booked on your Google Calendar ({user_email}).\n\n"
                 f"You can view the new event here: {confirmation_link}"
             )
-            return {"booking_confirmation": confirmation_message}
+            # Reset state after successful booking to allow for a new booking flow
+            return {
+                "booking_confirmation": confirmation_message,
+                "available_slots": [],
+                "date": ""
+            }
         else:
             return {"user_prompt": "I didn't quite understand which time you'd like. Please pick one from the list I provided."}
 
@@ -112,24 +117,34 @@ def confirm_booking(state: AgentState):
 
 
 def entry_router(state: AgentState):
-    if not state.available_slots:
+    # If there are no slots available in the state, we must check for them.
+    if not state.available_slots or not state.date:
         return "check_availability"
 
     router_prompt = f"""
     You are an AI assistant helping a user book an appointment.
-    The user was just shown a list of available time slots.
+    The user was just shown a list of available time slots for the date {state.date}.
     The user's latest message is: "{state.user_prompt}"
 
-    Based on this message, are they trying to select a time or are they asking a new question?
-    Choose one: "confirm_booking" or "check_availability"
-    Return a single JSON object with the key "action" and your choice as the value.
+    Based on this message, is the user trying to select one of the times offered, or are they asking a new question (e.g., asking for a different day)?
+    
+    - If they are selecting a time (e.g., "3pm works", "I'll take the second one", "10:00 AM"), choose "confirm_booking".
+    - If they are asking for a different day, asking a question, or changing their mind (e.g., "what about next week?", "who are you?", "nevermind"), choose "check_availability".
+
+    You must respond with a JSON object with a single key "action" and your choice as the value.
+    Example: {{"action": "confirm_booking"}}
     """
     response = llm.invoke([HumanMessage(content=router_prompt)])
     try:
         import json
-        decision = json.loads(response.content.strip().replace("```json", "").replace("```", ""))
+        # Handle potential markdown ```json ```
+        clean_response = response.content.strip()
+        if clean_response.startswith("```json"):
+            clean_response = clean_response[7:-3].strip()
+        decision = json.loads(clean_response)
         return decision.get("action", "check_availability")
-    except Exception:
+    except (json.JSONDecodeError, AttributeError):
+        # If the LLM fails to produce valid JSON, default to re-checking availability
         return "check_availability"
 
 def start_node(state):
