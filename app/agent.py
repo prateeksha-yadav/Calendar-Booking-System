@@ -26,7 +26,7 @@ class AgentState(BaseModel):
 
 
 # Initialize the LLM
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", google_api_key=api_key)
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=api_key)
 
 def get_user_intent(state: AgentState):
     prompt = f"""
