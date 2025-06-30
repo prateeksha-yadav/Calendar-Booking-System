@@ -8,6 +8,10 @@ class UserRequest(BaseModel):
     message: str
     session_id: str
 
+@app.get("/")
+async def root():
+    return {"message": "Calendar Booking Agent is running!"}
+
 @app.post("/chat")
 async def chat(request: UserRequest):
     # This will eventually call the LangGraph agent
