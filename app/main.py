@@ -1,6 +1,13 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from app.agent import app as agent_app
+import os
+
+print("---- CHECKING RENDER ENVIRONMENT ----")
+print(f"GOOGLE_API_KEY Loaded: {'GOOGLE_API_KEY' in os.environ}")
+print(f"GOOGLE_CREDENTIALS_JSON Loaded: {'GOOGLE_CREDENTIALS_JSON' in os.environ}")
+print(f"GOOGLE_TOKEN_JSON Loaded: {'GOOGLE_TOKEN_JSON' in os.environ}")
+print("---------------------------------")
 
 app = FastAPI()
 
