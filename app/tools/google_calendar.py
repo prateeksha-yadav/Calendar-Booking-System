@@ -37,9 +37,24 @@ def get_calendar_service():
             from google.auth.transport.requests import Request
             creds.refresh(Request())
         else:
+            # Check if running in a deployed environment like Streamlit Cloud
+            if 'STREAMLIT_SERVER_PORT' in os.environ or token_json_str:
+                raise ValueError(
+                    "Google Calendar authentication failed. "
+                    "The token is missing, invalid, or expired and couldn't be refreshed. "
+                    "If you are the app owner, please re-run the authentication locally "
+                    "to generate a new 'token.json' and update the 'GOOGLE_TOKEN_JSON' secret in your deployment environment."
+                )
+            
+            # Fallback to local interactive flow if not in a deployed environment
+            if not os.path.exists('credentials.json'):
+                raise FileNotFoundError(
+                    "credentials.json not found. Please follow the setup instructions in the README.md to get this file."
+                )
             flow = InstalledAppFlow.from_client_secrets_file(
                 'credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
+            
         # Save the credentials for the next run
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
